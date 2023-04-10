@@ -27,3 +27,8 @@ output "cluster_certificate_authority_data" {
   description = "Cluster Cert Auth Data"
   value       = module.eks.cluster_certificate_authority_data
 }
+
+output "oidc_provider" {
+  description = "EKS OIDC Provider"
+  value       = module.eks.oidc_provider
+}
