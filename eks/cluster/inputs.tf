@@ -13,11 +13,6 @@ variable "cluster_name" {
   type        = string
 }
 
-variable "dns_record_name" {
-  description = "Base DNS Name"
-  type        = string
-}
-
 variable "env" {
   description = "Deployment Environment"
   type        = string
@@ -36,11 +31,6 @@ variable "subnet_ids" {
 
 variable "vpc_id" {
   description = "AWS VPC ID"
-  type        = string
-}
-
-variable "zone_id" {
-  description = "AWS Zone ID"
   type        = string
 }
 
