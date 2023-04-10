@@ -22,9 +22,9 @@ locals {
   distinct_resource_record_values_ext = distinct(try(aws_acm_certificate.cert_ext.domain_validation_options[*].resource_record_value, []))
 
   local_tags = {
-    Name = "star.${var.full_domain_name}"
+    Name = "star.${var.full_dns_name}"
     env = var.env,
   }
-  
+
   tags = merge({}, local.local_tags)
 }

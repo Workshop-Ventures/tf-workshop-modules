@@ -1,5 +1,5 @@
 resource "aws_acm_certificate" "cert_ext" {
-  domain_name       = "*.${var.full_domain_name}"
+  domain_name       = "*.${var.full_dns_name}"
   validation_method = "DNS"
 
   tags = local.tags
@@ -18,7 +18,7 @@ resource "aws_route53_record" "cert_validation_ext" {
   # Wildcards also get the same validation record as their non-wildcard parent.
   # Deduplicate all SANs after stripping a leading "*." from each one.
   # https://github.com/simplisafe/tf-ecs-modules/blob/master/multi-acc/acm/main.tf#L29
-  count   = length(distinct([for san in flatten(["*.${var.full_domain_name}"]) : replace(san, "/^\\*\\./", "")]))
+  count   = length(distinct([for san in flatten(["*.${var.full_dns_name}"]) : replace(san, "/^\\*\\./", "")]))
   name    = local.distinct_resource_record_names_ext[count.index]
   type    = "CNAME"
   zone_id = var.zone_id
