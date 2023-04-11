@@ -74,6 +74,7 @@ module "eks" {
       {
         userarn  = "arn:aws:iam::${var.account_id}:user/${user}"
         username = user
+        groups   = []
       }
   ])
 
