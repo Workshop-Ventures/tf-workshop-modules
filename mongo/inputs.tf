@@ -22,6 +22,11 @@ variable "cluster_instance_size" {
   default     = "M0"
 }
 
+variable "cluster_name" {
+  description = "Name of the mongo cluster"
+  type        = string 
+}
+
 variable "mongodb_admin_user" {
   description = "MongoDB Admin Username"
   type        = string
@@ -32,11 +37,6 @@ variable "mongodb_admin_pass" {
   description = "MongoDB Admin Password"
   type        = string
   sensitive   = true
-}
-
-variable "mongodb_cluster_name" {
-  description = "Name of the mongo cluster"
-  type        = string 
 }
 
 variable "region" {

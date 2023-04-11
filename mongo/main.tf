@@ -5,7 +5,7 @@ resource "mongodbatlas_project" "main" {
 
 resource "mongodbatlas_cluster" "cluster" {
   project_id = mongodbatlas_project.main.id
-  name       = var.mongodb_cluster_name
+  name       = var.cluster_name
 
   # Provider Settings "block"
   provider_name = "TENANT"
