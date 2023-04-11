@@ -1,3 +1,11 @@
+terraform {
+  required_providers {
+    mongodbatlas = {
+      source = "mongodb/mongodbatlas"
+    }
+  }
+}
+
 resource "mongodbatlas_project" "main" {
   name   = var.atlas_project_name
   org_id = var.atlas_org_id
