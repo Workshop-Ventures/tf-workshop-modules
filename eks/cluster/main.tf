@@ -61,7 +61,7 @@ module "eks" {
   # create_aws_auth_configmap = true
   manage_aws_auth_configmap = true
 
-  aws_auth_users = flatten([
+  aws_auth_users = flatten([[
     for user in var.system_masters: 
       {
         userarn   = "arn:aws:iam::${var.account_id}:user/${user}"
@@ -75,7 +75,7 @@ module "eks" {
         userarn  = "arn:aws:iam::${var.account_id}:user/${user}"
         username = user
       }
-  ])
+  ]])
 
 
   eks_managed_node_groups = {
