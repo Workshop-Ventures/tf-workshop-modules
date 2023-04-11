@@ -34,9 +34,9 @@ resource "mongodbatlas_cluster" "cluster" {
   mongo_db_major_version       = "6.0"
   auto_scaling_disk_gb_enabled = "false"
 
-  lifecycle {
-    prevent_destroy = true
-  }
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
 
 #
