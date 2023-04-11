@@ -133,7 +133,7 @@ resource "aws_security_group_rule" "self_access" {
 }
 
 # Deployer Role
-resource "kubernetes_cluster_role" "deployer" {
+resource "kubernetes_role" "deployer" {
   metadata {
     namespace = "default"
     name      = "deployer" 
