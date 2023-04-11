@@ -31,7 +31,7 @@ resource "mongodbatlas_cluster" "cluster" {
   provider_instance_size_name = var.cluster_instance_size
 
   # Will not change till new version of MongoDB but must be included
-  mongo_db_major_version       = "6.0"
+  mongo_db_major_version       = "5.0"
   auto_scaling_disk_gb_enabled = "false"
 
   lifecycle {
