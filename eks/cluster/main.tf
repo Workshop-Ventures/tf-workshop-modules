@@ -149,7 +149,7 @@ resource "kubernetes_role" "deployer" {
 }
 
 resource "kubernetes_role_binding" "deployer" {
-  for_each = toset(var.deployer_users)
+  for_each = var.deployer_users
 
   metadata {
     namespace = "default"
