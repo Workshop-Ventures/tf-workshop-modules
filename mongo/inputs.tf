@@ -39,6 +39,12 @@ variable "mongodb_admin_pass" {
   sensitive   = true
 }
 
+variable "prevent_destroy" {
+  description = "Should we prevent you from destroying the cluster"
+  type        = bool
+  default     = true
+}
+
 variable "region" {
   description = "AWS Region Supported by Atlas"
   type        = string
