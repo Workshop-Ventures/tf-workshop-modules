@@ -61,14 +61,21 @@ module "eks" {
   # create_aws_auth_configmap = true
   manage_aws_auth_configmap = true
 
-  aws_auth_users = [
+  aws_auth_users = flatten([
     for user in var.system_masters: 
       {
         userarn   = "arn:aws:iam::${var.account_id}:user/${user}"
         username  = user
         groups    = ["system:masters"] 
       }
-  ]
+  ],
+  [
+    for user in var.deployers:
+      {
+        userarn  = "arn:aws:iam::${var.account_id}:user/${user}"
+        username = user
+      }
+  ])
 
 
   eks_managed_node_groups = {
@@ -123,4 +130,41 @@ resource "aws_security_group_rule" "self_access" {
   protocol    = "all"
   security_group_id = each.value.id
   self        = true
+}
+
+# Deployer Role
+resource "kubernetes_cluster_role" "deployer" {
+  metadata {
+    namespace = "default"
+    name      = "deployer" 
+  }
+
+  rule {
+    api_groups  = ["*"]
+    resources   = ["*"]
+    verbs       = ["*"]
+  }
+
+  depends_on = [module.eks]
+}
+
+resource "kubernetes_role_binding" "deployer" {
+  for_each = toset(var.deployer_users)
+
+  metadata {
+    namespace = "default"
+    name      = "deployer-role-binding"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = "deployer"
+  }
+
+  subject {
+    kind      = "User"
+    name      = each.value
+    api_group = "rbac.authorization.k8s.io"
+  }
 }

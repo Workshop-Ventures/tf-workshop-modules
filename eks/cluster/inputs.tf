@@ -54,6 +54,12 @@ variable "node_group_ssh_access" {
 
 # User Info
 variable "system_masters" {
-  description = "List of AWS User Names to give system access to"
+  description = "List of AWS User Names to give system master access to"
   type        = list(string)
+}
+
+variable "deployer_users" {
+  description = "List of AWS User Names create a user in K8S for"
+  type        = list(string)
+  default     = []
 }
