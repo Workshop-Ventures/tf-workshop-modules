@@ -1,6 +1,6 @@
 variable "access_list" {
   description = "MongoDB Access List"
-  type        = list(object({
+  type        = map(object({
     ip_address = string
     comment    = string
   }))
