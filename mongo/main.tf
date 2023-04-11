@@ -35,7 +35,7 @@ resource "mongodbatlas_cluster" "cluster" {
   auto_scaling_disk_gb_enabled = "false"
 
   lifecycle {
-    prevent_destroy = var.prevent_destroy
+    prevent_destroy = true
   }
 }
 
