@@ -63,3 +63,22 @@ variable "deployer_users" {
   type        = list(string)
   default     = []
 }
+
+# Role Info
+variable "system_master_roles" {
+  description = "List of the role name and user to give system master access to"
+  type        = list(object({
+    name      = string
+    user      = string
+  }))
+  default     = []
+}
+
+variable "deployer_roles" {
+  description = "List of the role name and user to give deployer access to"
+  type        = list(object({
+    name      = string
+    user      = string
+  }))
+  default     = []
+}

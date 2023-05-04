@@ -1,6 +1,6 @@
 # tf-eks-module-ingress-controller
 
-A Terraform module for creating private/public alb and/or nginx controllers (depending on cluster environment) according to SimpliSafe standards.
+A Terraform module for creating private/public alb and/or nginx controllers (depending on cluster environment) according to our standards.
 
 This module has direct dependency on the EKS Cluster and Worker modules.
 
