@@ -78,6 +78,23 @@ module "eks" {
       }
   ])
 
+  aws_auth_roles = concat([
+    for role in var.system_master_roles:
+      {
+        rolearn   = "arn:aws:iam::${var.account_id}:role/${role.name}"
+        username  = role.user
+        groups    = ["system:masters"]
+      }
+  ],
+  [
+    for role in var.deployer_roles:
+      {
+        rolearn   = "arn:aws:iam::${var.account_id}:role/${role.name}"
+        username  = role.user
+        groups    = []
+      }
+  ])
+
 
   eks_managed_node_groups = {
     for group in var.node_groups:
