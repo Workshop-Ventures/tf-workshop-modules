@@ -91,13 +91,3 @@ resource "aws_iam_user_policy" "ecs_deploy_user_policy" {
   })
 }
 
-resource "aws_iam_user_policy_attachment" "ecs_deploy_user_policy_attachment" {
-  user       = aws_iam_user.cluster_deployer.name
-  policy_arn = aws_iam_user_policy.ecs_deploy_user_policy.arn
-}
-
-resource "aws_iam_user_policy_attachment" "ecr_user_policy_attachment" {
-  user       = aws_iam_user.cluster_deployer.name
-  policy_arn = aws_iam_user_policy.ecr_user_policy.arn
-}
-
