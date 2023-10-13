@@ -47,11 +47,11 @@ resource "aws_ecr_repository" "service_repo" {
 
 # INITIAL ECS TASK
 resource "aws_ecs_task_definition" "initial" {
-  family                   = var.env
-  network_mode             = "awsvpc"
+  family                   = "${var.env}-${var.service_name}"
+  network_mode             = "default"
   requires_compatibilities = ["FARGATE"]
-  cpu                      = 256
-  memory                   = 512
+  cpu                      = 512
+  memory                   = 1024
   execution_role_arn       = aws_iam_role.ecs_service_task_role.arn
 
   container_definitions = jsonencode([{
@@ -59,7 +59,7 @@ resource "aws_ecs_task_definition" "initial" {
     image = "nginx"
     portMappings = [{
       containerPort = var.service_port
-      hostPort      = 0
+      hostPort      = var.service_port
     }]
   }])
 }
