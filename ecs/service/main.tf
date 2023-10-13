@@ -41,7 +41,8 @@ data "aws_route53_zone" "main" {
 
 # ECR REPO
 resource "aws_ecr_repository" "service_repo" {
-  name = "${var.env}-${var.service_name}"
+  count = var.env == "prd" ? 1 : 0
+  name = "${var.service_name}"
 }
 
 # INITIAL ECS TASK
