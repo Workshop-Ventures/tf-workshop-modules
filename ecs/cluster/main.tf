@@ -31,3 +31,73 @@ resource "aws_ecs_cluster" "main" {
     }
   }
 }
+
+// cluster deployer user
+resource "aws_iam_user" "cluster_deployer" {
+  name = "${var.env}-${var.cluster_name}-deployer"
+}
+
+resource "aws_iam_user_policy" "ecr_user_policy" {
+  name = "ECRUserPolicy"
+  user = aws_iam_user.ecr_user.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = [
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage",
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:PutImage",
+          "ecr:InitiateLayerUpload",
+          "ecr:UploadLayerPart",
+          "ecr:CompleteLayerUpload"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_user_policy" "ecs_deploy_user_policy" {
+  name = "ECSDeployUserPolicy"
+  user = aws_iam_user.ecs_deploy_user.name
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = [
+          "ecs:RegisterTaskDefinition",
+          "ecs:DeregisterTaskDefinition",
+          "ecs:ListTaskDefinitions",
+          "ecs:DescribeTaskDefinition",
+          "ecs:RunTask",
+          "ecs:StartTask",
+          "ecs:StopTask",
+          "ecs:DescribeTasks",
+          "ecs:ListTasks",
+          "ecs:UpdateService",
+          "ecs:DescribeServices",
+          "ecs:CreateService",
+          "ecs:DeleteService"
+        ],
+        Resource = aws_ecs_cluster.main.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_user_policy_attachment" "ecs_deploy_user_policy_attachment" {
+  user       = aws_iam_user.ecs_deploy_user.name
+  policy_arn = aws_iam_user_policy.ecs_deploy_user_policy.arn
+}
+
+resource "aws_iam_user_policy_attachment" "ecr_user_policy_attachment" {
+  user       = aws_iam_user.ecr_user.name
+  policy_arn = aws_iam_user_policy.ecr_user_policy.arn
+}
+
