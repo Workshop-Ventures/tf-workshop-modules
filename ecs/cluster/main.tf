@@ -39,7 +39,7 @@ resource "aws_iam_user" "cluster_deployer" {
 
 resource "aws_iam_user_policy" "ecr_user_policy" {
   name = "ECRUserPolicy"
-  user = aws_iam_user.ecr_user.name
+  user = aws_iam_user.cluster_deployer.name
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -63,7 +63,7 @@ resource "aws_iam_user_policy" "ecr_user_policy" {
 
 resource "aws_iam_user_policy" "ecs_deploy_user_policy" {
   name = "ECSDeployUserPolicy"
-  user = aws_iam_user.ecs_deploy_user.name
+  user = aws_iam_user.cluster_deployer.name
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -92,12 +92,12 @@ resource "aws_iam_user_policy" "ecs_deploy_user_policy" {
 }
 
 resource "aws_iam_user_policy_attachment" "ecs_deploy_user_policy_attachment" {
-  user       = aws_iam_user.ecs_deploy_user.name
+  user       = aws_iam_user.cluster_deployer.name
   policy_arn = aws_iam_user_policy.ecs_deploy_user_policy.arn
 }
 
 resource "aws_iam_user_policy_attachment" "ecr_user_policy_attachment" {
-  user       = aws_iam_user.ecr_user.name
+  user       = aws_iam_user.cluster_deployer.name
   policy_arn = aws_iam_user_policy.ecr_user_policy.arn
 }
 
