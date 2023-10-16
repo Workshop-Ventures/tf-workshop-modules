@@ -1,8 +1,6 @@
 # Locals
 locals {
   lb_port             = 443
-  dynamic_from_port   = 32768
-  dynamic_to_port     = 65535
 }
 
 # DATA
@@ -36,7 +34,7 @@ data "aws_subnets" "public" {
 }
 
 data "aws_route53_zone" "main" {
-  name = "${var.dns_record_name}."
+  name = "${var.dns_zone_name}."
 }
 
 # ECR REPO
@@ -48,7 +46,7 @@ resource "aws_ecr_repository" "service_repo" {
 # INITIAL ECS TASK
 resource "aws_ecs_task_definition" "initial" {
   family                   = "${var.env}-${var.service_name}"
-  network_mode             = "default"
+  network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
   cpu                      = 512
   memory                   = 1024
@@ -103,8 +101,8 @@ resource "aws_security_group" "task_sg" {
 
   ingress {
     protocol        = "tcp"
-    from_port       = local.dynamic_from_port
-    to_port         = local.dynamic_to_port
+    from_port       = var.service_port
+    to_port         = var.service_port
     security_groups = [aws_security_group.lb.id]
   }
 
@@ -135,6 +133,12 @@ resource "aws_ecs_service" "service" {
     type = "ECS"
   }
 
+  load_balancer {
+    target_group_arn = aws_lb_target_group.service.id
+    container_name   = var.service_name
+    container_port   = var.service_port
+  }
+
   network_configuration {
     subnets = data.aws_subnets.private.ids
     security_groups = [aws_security_group.task_sg.id]
@@ -143,6 +147,8 @@ resource "aws_ecs_service" "service" {
   lifecycle {
     ignore_changes = [task_definition]
   }
+
+  depends_on = [ aws_lb.main ]
 }
 
 # Task Role Permissions
@@ -169,6 +175,38 @@ EOF
 resource "aws_iam_role_policy_attachment" "task_role_policy_attachment" {
   role       = aws_iam_role.ecs_service_task_role.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
+}
+
+resource "aws_iam_policy" "task_ecr_access" {
+  name        = "${var.service_name}-task-ecr-access"
+  description = "Allow ECS Task to access ECR"
+  policy      = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowECR",
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:GetRepositoryPolicy",
+        "ecr:DescribeRepositories",
+        "ecr:ListImages",
+        "ecr:DescribeImages",
+        "ecr:BatchGetImage"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "task_ecr_policy_attachment" {
+  role       = aws_iam_role.ecs_service_task_role.name
+  policy_arn = aws_iam_policy.task_ecr_access.arn
 }
 
 # LB
@@ -203,7 +241,7 @@ resource "aws_lb_target_group" "service" {
 
 resource "aws_lb_listener" "service" {
   load_balancer_arn = aws_lb.main.id
-  port              = "${var.service_port}"
+  port              = local.lb_port
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   certificate_arn   = aws_acm_certificate.service.arn
@@ -241,7 +279,7 @@ resource "aws_acm_certificate_validation" "cert" {
 
 resource "aws_route53_record" "service" {
   zone_id = data.aws_route53_zone.main.zone_id
-  name    = "${var.service_name}.${data.aws_route53_zone.main.name}"
+  name    = "${var.dns_prefix}.${data.aws_route53_zone.main.name}"
   type    = "A"
 
   alias {

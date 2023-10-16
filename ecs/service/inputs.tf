@@ -3,8 +3,13 @@ variable "cluster_arn" {
   type        = string
 }
 
-variable "dns_record_name" {
-  description = "DNS Record Name"
+variable "dns_zone_name" {
+  description = "DNS Zone Name"
+  type        = string
+}
+
+variable "dns_prefix" {
+  description = "DNS Record Prefix"
   type        = string
 }
 
