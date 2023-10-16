@@ -90,6 +90,25 @@ resource "aws_iam_policy" "ecs_deploy_policy" {
   })
 }
 
+resource "aws_iam_policy" "iam_pass_roles_policy" {
+  name = "IAMPassRolesPolicy"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = [
+          "iam:PassRole"
+        ],
+        Resource = [
+          "arn:aws:iam::${var.account_id}:role/*",
+        ],
+      }
+    ]
+  })
+}
+
 data "tls_certificate" "github" {
   url = "https://token.actions.githubusercontent.com/.well-known/openid-configuration"
 }
@@ -147,6 +166,11 @@ resource "aws_iam_role_policy_attachment" "deployer-role-ecs" {
 resource "aws_iam_role_policy_attachment" "deployer-role-ecr" {
   role        = aws_iam_role.deployer-role.name
   policy_arn  = aws_iam_policy.ecr_deploy_policy.arn
+}
+
+resource "aws_iam_role_policy_attachment" "deployer-role-iam" {
+  role        = aws_iam_role.deployer-role.name
+  policy_arn  = aws_iam_policy.iam_pass_roles_policy.arn
 }
 
 # Give the user direct permissions as well
