@@ -84,7 +84,7 @@ resource "aws_iam_policy" "ecs_deploy_policy" {
           "ecs:CreateService",
           "ecs:DeleteService"
         ],
-        Resource = aws_ecs_cluster.main.arn
+        Resource = "*"
       }
     ]
   })
