@@ -53,7 +53,7 @@ resource "aws_ecs_task_definition" "initial" {
   execution_role_arn       = aws_iam_role.ecs_service_task_role.arn
 
   container_definitions = jsonencode([{
-    name  = "${var.env}-${var.service_name}"
+    name  = var.service_name
     image = "nginx"
     portMappings = [{
       containerPort = var.service_port
