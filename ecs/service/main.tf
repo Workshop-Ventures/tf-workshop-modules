@@ -148,7 +148,7 @@ resource "aws_ecs_service" "service" {
     ignore_changes = [task_definition]
   }
 
-  depends_on = [ aws_lb.main ]
+  depends_on = [ aws_lb.main, aws_lb_listener.service ]
 }
 
 # Task Role Permissions
@@ -255,7 +255,7 @@ resource "aws_lb_listener" "service" {
 
 # DNS RECORD 
 resource "aws_acm_certificate" "service" {
-  domain_name       = aws_route53_record.service.fqdn
+  domain_name       = "${var.dns_prefix}.${data.aws_route53_zone.main.name}"
   validation_method = "DNS"
 
   lifecycle {
