@@ -1,10 +1,10 @@
 # EKS Cluster Module
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "19.12.0"
+  version = "~> 20.31"
 
   cluster_name    = var.cluster_name
-  cluster_version = "1.30"
+  cluster_version = "1.31"
 
   cluster_endpoint_private_access = true
   cluster_endpoint_public_access = true
@@ -25,7 +25,7 @@ module "eks" {
   }
 
   eks_managed_node_group_defaults = {
-    ami_type = "AL2_x86_64"
+    ami_type = "AL2023_x86_64_STANDARD"
 
     attach_cluster_primary_security_group = false
 
@@ -114,8 +114,8 @@ module "eks" {
   }
 
   tags = {
-    env        = var.env
-    created_by = "Terraform"
+    Env        = var.env
+    ManagedBy  = "terraform"
   }
 }
 
