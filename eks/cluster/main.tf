@@ -115,7 +115,7 @@ module "eks" {
 
   tags = {
     Env        = var.env
-    ManagedBy  = "terraform"
+    ManagedBy  = "Terraform"
   }
 }
 
