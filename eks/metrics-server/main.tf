@@ -12,8 +12,8 @@ resource "helm_release" "metrics_server" {
 
   dynamic "set" {
     for_each = {
-      "resources.requests.cpu"    = "1000m"
-      "resources.requests.memory" = "1024Mi"
+      "resources.requests.cpu"    = "100m"
+      "resources.requests.memory" = "200Mi"
     }
     content {
       name  = set.key
