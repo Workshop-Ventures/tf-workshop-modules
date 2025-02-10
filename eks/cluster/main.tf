@@ -1,7 +1,7 @@
 # EKS Cluster Module
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.31"
+  version = "~> 19.21"
 
   cluster_name    = var.cluster_name
   cluster_version = "1.31"
@@ -59,7 +59,6 @@ module "eks" {
 
   # aws-auth configmap
   # create_aws_auth_configmap = true
-  manage_aws_auth_configmap = true
 
   aws_auth_users = concat([
     for user in var.system_masters: 
