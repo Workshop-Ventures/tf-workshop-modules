@@ -72,7 +72,7 @@ resource "helm_release" "external_dns_ext" {
   name      = "external-dns-ext"
   namespace = "kube-system"
 
-  repository = "https://charts.bitnami.com/bitnami"
+  repository = "oci://registry-1.docker.io/bitnamicharts"
 
   values = [templatefile("${path.module}/templates/values.yaml.tpl", {
     role_arn  = aws_iam_role.ext_dns_role.arn,
