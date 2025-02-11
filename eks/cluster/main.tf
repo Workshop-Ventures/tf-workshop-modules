@@ -1,7 +1,7 @@
 # EKS Cluster Module
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 19.21"
+  version = "~> 20.31"
 
   cluster_name    = var.cluster_name
   cluster_version = "1.31"
@@ -11,29 +11,6 @@ module "eks" {
 
   vpc_id     = var.vpc_id
   subnet_ids = var.subnet_ids
-
-  cluster_addons = {
-    coredns = {
-      most_recent = true
-    }
-    kube-proxy = {
-      most_recent = true
-    }
-    vpc-cni = {
-      most_recent = true
-    }
-  }
-
-  eks_managed_node_group_defaults = {
-    ami_type = "AL2023_x86_64_STANDARD"
-
-    attach_cluster_primary_security_group = false
-
-    # Disabling and using externally provided security groups
-    create_security_group = false
-  }
-
-  enable_irsa = true
 
   cluster_security_group_additional_rules = {
     ingress_nodes_ephemeral_ports_tcp = {
@@ -46,65 +23,36 @@ module "eks" {
     }
   }
 
-  node_security_group_additional_rules = {
-    ingress_self_all = {
-      description     = "Node to node all ports/protocols"
-      protocol        = "-1"
-      from_port       = 0
-      to_port         = 0
-      type            = "ingress"
-      self            = true
+  cluster_addons = {
+    coredns                = {
+      most_recent = true
+    }
+    eks-pod-identity-agent = {
+      most_recent = true
+    }
+    kube-proxy             = {
+      most_recent = true
+    }
+    vpc-cni                = {
+      most_recent = true
     }
   }
 
-  # aws-auth configmap
-  # create_aws_auth_configmap = true
-
-  aws_auth_users = concat([
-    for user in var.system_masters: 
-      {
-        userarn   = "arn:aws:iam::${var.account_id}:user/${user}"
-        username  = user
-        groups    = ["system:masters"] 
-      }
-  ],
-  [
-    for user in var.deployer_users:
-      {
-        userarn  = "arn:aws:iam::${var.account_id}:user/${user}"
-        username = user
-        groups   = []
-      }
-  ])
-
-  aws_auth_roles = concat([
-    for role in var.system_master_roles:
-      {
-        rolearn   = "arn:aws:iam::${var.account_id}:role/${role.name}"
-        username  = role.user
-        groups    = ["system:masters"]
-      }
-  ],
-  [
-    for role in var.deployer_roles:
-      {
-        rolearn   = "arn:aws:iam::${var.account_id}:role/${role.name}"
-        username  = role.user
-        groups    = []
-      }
-  ])
-
+  enable_irsa = true
+  enable_cluster_creator_admin_permissions = true
 
   eks_managed_node_groups = {
     for group in var.node_groups:
       group.name => {
-        name              = group.name
-        instance_types    = group.instance_types
-        min_size          = group.min_size
-        max_size          = group.max_size
-        desired_size      = group.desired_size
+        ami_type            = "AL2023_x86_64_STANDARD"
+        ami_release_version = "1.31.4-20250203"
+        name                = group.name
+        instance_types      = group.instance_types
+        min_size            = group.min_size
+        max_size            = group.max_size
+        desired_size        = group.desired_size
 
-        capacity_type     = group.capacity_type
+        capacity_type       = group.capacity_type
 
         vpc_security_group_ids = [
           aws_security_group.node_group[group.name].id
@@ -117,6 +65,49 @@ module "eks" {
     ManagedBy  = "Terraform"
   }
 }
+
+
+module "eks_aws_auth" {
+   source  = "terraform-aws-modules/eks/aws//modules/aws-auth"
+   version = "~> 20.31"
+
+   manage_aws_auth_configmap = true
+
+   aws_auth_users = concat([
+     for user in var.system_masters: 
+       {
+         userarn   = "arn:aws:iam::${var.account_id}:user/${user}"
+         username  = user
+         groups    = ["system:masters"] 
+       }
+   ],
+   [
+     for user in var.deployer_users:
+       {
+         userarn  = "arn:aws:iam::${var.account_id}:user/${user}"
+         username = user
+         groups   = []
+       }
+   ])
+
+   aws_auth_roles = concat([
+     for role in var.system_master_roles:
+       {
+         rolearn   = "arn:aws:iam::${var.account_id}:role/${role.name}"
+         username  = role.user
+         groups    = ["system:masters"]
+       }
+   ],
+   [
+     for role in var.deployer_roles:
+       {
+         rolearn   = "arn:aws:iam::${var.account_id}:role/${role.name}"
+         username  = role.user
+         groups    = []
+       }
+   ])
+}
+
 
 # Security Groups
 resource "aws_security_group" "node_group" {
@@ -184,4 +175,5 @@ resource "kubernetes_role_binding" "deployer" {
     name      = each.key
     api_group = "rbac.authorization.k8s.io"
   }
+
 }

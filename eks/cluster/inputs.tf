@@ -3,11 +3,6 @@ variable "account_id" {
   type        = string
 }
 
-variable "account_alias" {
-  description = "Name of the Account"
-  type        = string
-}
-
 variable "cluster_name" {
   description = "Name of EKS Cluster"
   type        = string

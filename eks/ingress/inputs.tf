@@ -15,11 +15,6 @@ variable "account_id" {
   type        = string
 }
 
-variable "account_alias" {
-  description = "Account alias"
-  type        = string
-}
-
 variable "api_server_endpoint" {
   description = "Endpoint for your Kubernetes API server"
   type        = string
