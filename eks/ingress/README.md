@@ -56,7 +56,6 @@ module "ingress" {
   cluster_name        = module.name-tag.service_resource_name
   subnet_ids          = data.aws_subnet_ids.private_subnets.ids
   account_id          = var.account_id
-  account_alias       = var.account_alias
   region              = terraform.workspace
 
   depends_on = [module.eks_cluster]

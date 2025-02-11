@@ -32,3 +32,8 @@ output "oidc_provider" {
   description = "EKS OIDC Provider"
   value       = module.eks.oidc_provider
 }
+
+output "oidc_provider_arn" {
+  description = "EKS OIDC Provider ARN"
+  value       = module.eks.oidc_provider_arn
+}
