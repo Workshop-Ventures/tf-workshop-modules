@@ -77,7 +77,8 @@ resource "helm_release" "external_dns_ext" {
   values = [templatefile("${path.module}/templates/values.yaml.tpl", {
     role_arn  = aws_iam_role.ext_dns_role.arn,
     scheme    = "internet-facing",
-    zone_type = "public"
+    zone_type = "public",
+    region    = var.region
   })]
 }
 

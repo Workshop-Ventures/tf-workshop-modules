@@ -3,6 +3,7 @@ txtOwnerId: "external-dns"
 policy: upsert-only
 aws:
   zoneType: ${zone_type}
+  region: ${region}
 annotationFilter: alb.ingress.kubernetes.io/scheme in (${scheme})
 rbac:
   create: true
