@@ -4,7 +4,7 @@ module "eks" {
   version = "~> 21.0"
 
   name               = var.cluster_name
-  kubernetes_version = "1.35"
+  kubernetes_version = var.kubernetes_version
 
   endpoint_private_access = true
   endpoint_public_access  = true
@@ -38,7 +38,9 @@ module "eks" {
     }
   }
 
-  enable_cluster_creator_admin_permissions = true
+  # The cluster creator's access is granted explicitly via system_masters below.
+  # Leaving this true causes a 409 conflict when the apply-er is also in system_masters.
+  enable_cluster_creator_admin_permissions = false
 
   # Access entries replace the removed aws-auth submodule.
   access_entries = merge(
@@ -83,9 +85,11 @@ module "eks" {
   eks_managed_node_groups = {
     for group in var.node_groups :
     group.name => {
-      ami_type            = "AL2023_x86_64_STANDARD"
-      ami_release_version = "1.31.4-20250203"
-      name                = group.name
+      ami_type = "AL2023_x86_64_STANDARD"
+      # ami_release_version intentionally omitted — defaults to the latest AMI for the
+      # cluster's kubernetes_version. Pinning here previously caused kubelet/control-plane
+      # version skew and node groups failing with "Unhealthy nodes".
+      name = group.name
       instance_types      = group.instance_types
       min_size            = group.min_size
       max_size            = group.max_size
@@ -122,7 +126,7 @@ resource "aws_security_group_rule" "ssh_access" {
   to_port           = 22
   protocol          = "tcp"
   security_group_id = each.value.id
-  cidr_blocks       = var.node_group_ssh_access
+  cidr_blocks       = toset(var.node_group_ssh_access)
 }
 
 # Open up the SG to itself on all ports

@@ -8,6 +8,12 @@ variable "cluster_name" {
   type        = string
 }
 
+variable "kubernetes_version" {
+  description = "Kubernetes version for the EKS control plane"
+  type        = string
+  default     = "1.35"
+}
+
 variable "env" {
   description = "Deployment Environment"
   type        = string
