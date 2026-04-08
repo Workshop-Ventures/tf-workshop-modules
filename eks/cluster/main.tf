@@ -1,18 +1,18 @@
 # EKS Cluster Module
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.31"
+  version = "~> 21.0"
 
-  cluster_name    = var.cluster_name
-  cluster_version = "1.31"
+  name               = var.cluster_name
+  kubernetes_version = "1.35"
 
-  cluster_endpoint_private_access = true
-  cluster_endpoint_public_access = true
+  endpoint_private_access = true
+  endpoint_public_access  = true
 
   vpc_id     = var.vpc_id
   subnet_ids = var.subnet_ids
 
-  cluster_security_group_additional_rules = {
+  security_group_additional_rules = {
     ingress_nodes_ephemeral_ports_tcp = {
       description                = "Nodes on ephemeral ports"
       protocol                   = "tcp"
@@ -23,89 +23,86 @@ module "eks" {
     }
   }
 
-  cluster_addons = {
-    coredns                = {
+  addons = {
+    coredns = {
       most_recent = true
     }
     eks-pod-identity-agent = {
       most_recent = true
     }
-    kube-proxy             = {
+    kube-proxy = {
       most_recent = true
     }
-    vpc-cni                = {
+    vpc-cni = {
       most_recent = true
     }
   }
 
-  enable_irsa = true
   enable_cluster_creator_admin_permissions = true
 
-  eks_managed_node_groups = {
-    for group in var.node_groups:
-      group.name => {
-        ami_type            = "AL2023_x86_64_STANDARD"
-        ami_release_version = "1.31.4-20250203"
-        name                = group.name
-        instance_types      = group.instance_types
-        min_size            = group.min_size
-        max_size            = group.max_size
-        desired_size        = group.desired_size
-
-        capacity_type       = group.capacity_type
-
-        vpc_security_group_ids = [
-          aws_security_group.node_group[group.name].id
-        ]
+  # Access entries replace the removed aws-auth submodule.
+  access_entries = merge(
+    {
+      for user in var.system_masters : "user-${user}" => {
+        principal_arn = "arn:aws:iam::${var.account_id}:user/${user}"
+        policy_associations = {
+          admin = {
+            policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            access_scope = {
+              type = "cluster"
+            }
+          }
+        }
       }
+    },
+    {
+      for user in var.deployer_users : "deployer-user-${user}" => {
+        principal_arn = "arn:aws:iam::${var.account_id}:user/${user}"
+      }
+    },
+    {
+      for role in var.system_master_roles : "role-${role.name}" => {
+        principal_arn = "arn:aws:iam::${var.account_id}:role/${role.name}"
+        policy_associations = {
+          admin = {
+            policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+            access_scope = {
+              type = "cluster"
+            }
+          }
+        }
+      }
+    },
+    {
+      for role in var.deployer_roles : "deployer-role-${role.name}" => {
+        principal_arn = "arn:aws:iam::${var.account_id}:role/${role.name}"
+      }
+    },
+  )
+
+  eks_managed_node_groups = {
+    for group in var.node_groups :
+    group.name => {
+      ami_type            = "AL2023_x86_64_STANDARD"
+      ami_release_version = "1.31.4-20250203"
+      name                = group.name
+      instance_types      = group.instance_types
+      min_size            = group.min_size
+      max_size            = group.max_size
+      desired_size        = group.desired_size
+
+      capacity_type = group.capacity_type
+
+      vpc_security_group_ids = [
+        aws_security_group.node_group[group.name].id
+      ]
+    }
   }
 
   tags = {
-    Env        = var.env
-    ManagedBy  = "Terraform"
+    Env       = var.env
+    ManagedBy = "Terraform"
   }
-}
-
-
-module "eks_aws_auth" {
-   source  = "terraform-aws-modules/eks/aws//modules/aws-auth"
-   version = "~> 20.31"
-
-   manage_aws_auth_configmap = true
-
-   aws_auth_users = concat([
-     for user in var.system_masters: 
-       {
-         userarn   = "arn:aws:iam::${var.account_id}:user/${user}"
-         username  = user
-         groups    = ["system:masters"] 
-       }
-   ],
-   [
-     for user in var.deployer_users:
-       {
-         userarn  = "arn:aws:iam::${var.account_id}:user/${user}"
-         username = user
-         groups   = []
-       }
-   ])
-
-   aws_auth_roles = concat([
-     for role in var.system_master_roles:
-       {
-         rolearn   = "arn:aws:iam::${var.account_id}:role/${role.name}"
-         username  = role.user
-         groups    = ["system:masters"]
-       }
-   ],
-   [
-     for role in var.deployer_roles:
-       {
-         rolearn   = "arn:aws:iam::${var.account_id}:role/${role.name}"
-         username  = role.user
-         groups    = []
-       }
-   ])
 }
 
 
@@ -120,43 +117,43 @@ resource "aws_security_group" "node_group" {
 resource "aws_security_group_rule" "ssh_access" {
   for_each = aws_security_group.node_group
 
-  type        = "ingress"
-  from_port   = 22
-  to_port     = 22
-  protocol    = "tcp"
+  type              = "ingress"
+  from_port         = 22
+  to_port           = 22
+  protocol          = "tcp"
   security_group_id = each.value.id
-  cidr_blocks = var.node_group_ssh_access
+  cidr_blocks       = var.node_group_ssh_access
 }
 
 # Open up the SG to itself on all ports
 resource "aws_security_group_rule" "self_access" {
   for_each = aws_security_group.node_group
 
-  type        = "ingress"
-  from_port   = 0
-  to_port     = 65535
-  protocol    = "all"
+  type              = "ingress"
+  from_port         = 0
+  to_port           = 65535
+  protocol          = "all"
   security_group_id = each.value.id
-  self        = true
+  self              = true
 }
 
 # Deployer Role
-resource "kubernetes_role" "deployer" {
+resource "kubernetes_role_v1" "deployer" {
   metadata {
     namespace = "default"
-    name      = "deployer" 
+    name      = "deployer"
   }
 
   rule {
-    api_groups  = ["*"]
-    resources   = ["*"]
-    verbs       = ["*"]
+    api_groups = ["*"]
+    resources  = ["*"]
+    verbs      = ["*"]
   }
 
   depends_on = [module.eks]
 }
 
-resource "kubernetes_role_binding" "deployer" {
+resource "kubernetes_role_binding_v1" "deployer" {
   for_each = toset(var.deployer_users)
 
   metadata {

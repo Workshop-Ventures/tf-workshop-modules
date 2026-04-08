@@ -5,19 +5,21 @@ resource "helm_release" "metrics_server" {
   repository = "https://kubernetes-sigs.github.io/metrics-server/"
   version    = var.chart_version
 
-  set {
-    name  = "image.tag"
-    value = var.container_version
-  }
-
-  dynamic "set" {
-    for_each = {
-      "resources.requests.cpu"    = "100m"
-      "resources.requests.memory" = "200Mi"
-    }
-    content {
-      name  = set.key
-      value = set.value
-    }
-  }
+  set = concat(
+    [
+      {
+        name  = "image.tag"
+        value = var.container_version
+      },
+    ],
+    [
+      for k, v in {
+        "resources.requests.cpu"    = "100m"
+        "resources.requests.memory" = "200Mi"
+      } : {
+        name  = k
+        value = v
+      }
+    ],
+  )
 }

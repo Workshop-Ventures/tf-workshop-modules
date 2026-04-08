@@ -40,7 +40,7 @@ resource "kubectl_manifest" "alb_ingress_controller" {
 # Service Account
 ###########################################################
 
-resource "kubernetes_service_account" "service_account" {
+resource "kubernetes_service_account_v1" "service_account" {
   metadata {
     annotations = {
       "eks.amazonaws.com/role-arn" = aws_iam_role.alb_nginx_role.arn
@@ -282,17 +282,16 @@ resource "helm_release" "aws_load_balancer_controller" {
   name       = "aws-load-balancer-controller"
   namespace  = "kube-system"
   repository = "https://aws.github.io/eks-charts"
-  dynamic "set" {
-    for_each = {
+  set = [
+    for k, v in {
       "clusterName"           = var.cluster_name
       "serviceAccount.create" = "false"
       "serviceAccount.name"   = "alb-ingress-controller"
+    } : {
+      name  = k
+      value = v
     }
-    content {
-      name  = set.key
-      value = set.value
-    }
-  }
+  ]
 
   depends_on = [null_resource.wait_for_workers]
 }
