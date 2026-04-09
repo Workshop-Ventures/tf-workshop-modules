@@ -24,16 +24,21 @@ module "eks" {
   }
 
   addons = {
+    # vpc-cni and kube-proxy must install BEFORE node groups, otherwise nodes
+    # boot without a CNI plugin, never go Ready, and the node group create
+    # fails with NodeCreationFailure: "Unhealthy nodes in the kubernetes cluster".
+    vpc-cni = {
+      most_recent    = true
+      before_compute = true
+    }
+    kube-proxy = {
+      most_recent    = true
+      before_compute = true
+    }
     coredns = {
       most_recent = true
     }
     eks-pod-identity-agent = {
-      most_recent = true
-    }
-    kube-proxy = {
-      most_recent = true
-    }
-    vpc-cni = {
       most_recent = true
     }
   }
