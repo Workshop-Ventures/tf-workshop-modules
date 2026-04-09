@@ -39,3 +39,8 @@ variable "region" {
   description = "AWS Account Region"
   type        = string
 }
+
+variable "vpc_id" {
+  description = "VPC ID the cluster lives in. Passed to the aws-load-balancer-controller chart so it doesn't need to query EC2 IMDS (which is often blocked from pods)."
+  type        = string
+}

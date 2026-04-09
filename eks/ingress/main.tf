@@ -287,6 +287,10 @@ resource "helm_release" "aws_load_balancer_controller" {
       "clusterName"           = var.cluster_name
       "serviceAccount.create" = "false"
       "serviceAccount.name"   = "alb-ingress-controller"
+      # Pass VPC + region explicitly so the controller doesn't fall back to
+      # EC2 IMDS (which is often unreachable from pods via hop-limit=1).
+      "vpcId"     = var.vpc_id
+      "region"    = var.region
     } : {
       name  = k
       value = v
