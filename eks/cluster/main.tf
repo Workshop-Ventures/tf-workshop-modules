@@ -124,7 +124,10 @@ resource "aws_security_group" "node_group" {
 }
 
 resource "aws_security_group_rule" "ssh_access" {
-  for_each = aws_security_group.node_group
+  # Only create the SSH rule when there are actually CIDRs to allow.
+  # An empty cidr_blocks list creates a rule AWS immediately rejects,
+  # leaving Terraform unable to read it back ("couldn't find resource").
+  for_each = length(var.node_group_ssh_access) > 0 ? aws_security_group.node_group : {}
 
   type              = "ingress"
   from_port         = 22
