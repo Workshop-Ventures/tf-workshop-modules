@@ -66,13 +66,18 @@ resource "aws_iam_role_policy_attachment" "ext_dns_policy_attachment" {
 
 ###########################################################
 # External-DNS Helm Chart EXT
+#
+# We use the official external-dns chart (maintained by the external-dns
+# project at kubernetes-sigs). The Bitnami chart was moved behind a paid
+# registry in August 2025, so pulls of the free image tag started 404-ing.
+# The official chart uses a different value schema than Bitnami's.
 ###########################################################
 resource "helm_release" "external_dns_ext" {
   chart     = "external-dns"
   name      = "external-dns-ext"
   namespace = "kube-system"
 
-  repository = "oci://registry-1.docker.io/bitnamicharts"
+  repository = "https://kubernetes-sigs.github.io/external-dns/"
 
   values = [templatefile("${path.module}/templates/values.yaml.tpl", {
     role_arn  = aws_iam_role.ext_dns_role.arn,
