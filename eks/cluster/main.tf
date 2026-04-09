@@ -83,6 +83,11 @@ module "eks" {
     {
       for role in var.deployer_roles : "deployer-role-${role.name}" => {
         principal_arn = "arn:aws:iam::${var.account_id}:role/${role.name}"
+        # Put the role into a k8s group so RBAC can bind to it. We can't bind
+        # by username because EKS access entries set the username to the
+        # session-arn (with a {{SessionName}} placeholder), which RBAC
+        # subjects don't support.
+        kubernetes_groups = ["deployer-roles"]
       }
     },
   )
@@ -170,7 +175,7 @@ resource "kubernetes_role_binding_v1" "deployer" {
 
   metadata {
     namespace = "default"
-    name      = "deployer-role-binding"
+    name      = "deployer-role-binding-${each.key}"
   }
 
   role_ref {
@@ -185,4 +190,31 @@ resource "kubernetes_role_binding_v1" "deployer" {
     api_group = "rbac.authorization.k8s.io"
   }
 
+  depends_on = [module.eks]
+}
+
+# Bind the "deployer-roles" k8s group to the deployer Role.
+# IAM roles in var.deployer_roles get added to this group via their EKS
+# access entry's kubernetes_groups setting.
+resource "kubernetes_role_binding_v1" "deployer_roles" {
+  count = length(var.deployer_roles) > 0 ? 1 : 0
+
+  metadata {
+    namespace = "default"
+    name      = "deployer-role-binding-roles"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "Role"
+    name      = "deployer"
+  }
+
+  subject {
+    kind      = "Group"
+    name      = "deployer-roles"
+    api_group = "rbac.authorization.k8s.io"
+  }
+
+  depends_on = [module.eks]
 }
