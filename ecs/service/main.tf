@@ -18,7 +18,7 @@ data "aws_subnets" "private" {
   }
 
   tags = {
-    Type = "private"
+    Tier = "private"
   }
 }
 
@@ -29,7 +29,7 @@ data "aws_subnets" "public" {
   }
 
   tags = {
-    Type = "public"
+    Tier = "public"
   }
 }
 
